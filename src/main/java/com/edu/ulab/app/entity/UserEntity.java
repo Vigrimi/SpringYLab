@@ -1,17 +1,21 @@
-package com.edu.ulab.app.dto;
+package com.edu.ulab.app.entity;
 
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.validation.annotation.Validated;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @Data
 @Builder
 @Validated
-public class UserDto {
-    private Long id;
+public class UserEntity {
 
     @NotNull
+    private Long id;
+
+    @NotBlank
     private String fullName;
 
     @NotNull
@@ -19,4 +23,7 @@ public class UserDto {
 
     @NotNull
     private int age;
+
+    @NotNull
+    private List<Long> userHasBooksIdList;
 }

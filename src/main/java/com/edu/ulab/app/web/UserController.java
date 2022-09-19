@@ -36,19 +36,34 @@ public class UserController {
                                     schema = @Schema(implementation = UserBookResponse.class)))})
     public UserBookResponse createUserWithBooks(@RequestBody UserBookRequest request,
                                                 @RequestHeader(RQID) @Pattern(regexp = REQUEST_ID_PATTERN) final String requestId) {
+        // TODO настроить если останется время, чтобы такой же юзер с такими же книгами не добавлялся - не плодились дубли
         UserBookResponse response = userDataFacade.createUserWithBooks(request);
         log.info("Response with created user and his books: {}", response);
         return response;
     }
 
     @PutMapping(value = "/update")
+    @Operation(summary = "Update data about: user and books he has got.",
+            responses = {
+                    @ApiResponse(description = "Update User and books (реализовано так, что из входных данных берём " +
+                            "имя и роль (тайтл) юзера и по ним ищем в базе, таким образом изменить можно только " +
+                            "возраст юзера и список его книг)",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = UserBookResponse.class)))})
     public UserBookResponse updateUserWithBooks(@RequestBody UserBookRequest request) {
+        // реализовано так, что из входных данных берём имя и роль (тайтл) юзера и по ним ищем в базе, таким образом
+        // изменить можно только возраст юзера и список его книг
         UserBookResponse response = userDataFacade.updateUserWithBooks(request);
         log.info("Response with updated user and his books: {}", response);
         return response;
     }
 
     @GetMapping(value = "/get/{userId}")
+    @Operation(summary = "Get user and all his books by userId.",
+            responses = {
+                    @ApiResponse(description = "Info by userId",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = UserBookResponse.class)))})
     public UserBookResponse updateUserWithBooks(@PathVariable Long userId) {
         UserBookResponse response = userDataFacade.getUserWithBooks(userId);
         log.info("Response with user and his books: {}", response);
@@ -56,6 +71,11 @@ public class UserController {
     }
 
     @DeleteMapping(value = "/delete/{userId}")
+    @Operation(summary = "Delete user by userId and all his books.",
+            responses = {
+                    @ApiResponse(description = "Delete by userId",
+                            content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = UserBookResponse.class)))})
     public void deleteUserWithBooks(@PathVariable Long userId) {
         log.info("Delete user and his books:  userId {}", userId);
         userDataFacade.deleteUserWithBooks(userId);

@@ -79,6 +79,11 @@
             <artifactId>springdoc-openapi-ui</artifactId>
             <version>${springdoc-openapi-ui.version}</version>
         </dependency>
+        <!--для имитации БД-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
