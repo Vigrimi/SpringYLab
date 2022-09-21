@@ -16,5 +16,7 @@ public interface IUserCacheRepo {
 
     void deleteUserByUserId(Long id);
 
-    UserEntity findUserEntityByUserDto(UserDto userDto);
+    UserEntity findUserEntityByFullNameAndTitleFromUserDto(UserDto userDto);
+
+    UserEntity findUserEntityByFullNameAndTitleAndAgeFromUserDto(UserDto userDto);
 }

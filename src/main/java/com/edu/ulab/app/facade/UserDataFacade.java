@@ -45,7 +45,12 @@ public class UserDataFacade {
         log.info("Got user book create request: {}", userBookRequest);
         UserDto userDto = userMapper.userRequestToUserDto(userBookRequest.getUserRequest());
         log.info("Mapped user request: {}", userDto);
-
+        UserEntity userEntityForCheck = userService.checkIfNewUserEntityFromUserDtoAlreadyIsInDB(userDto);
+        if (userEntityForCheck.getId() > USER_ID_NOT_FOUND){
+            log.error("Exception - can't create new user - already exist: {}", userDto);
+            throw new NotFoundException("Упс, такой user уже есть в базе под идентификационным номером id=" +
+                    userEntityForCheck.getId() + ". Воспользуйтесь кнопкой <Update> или <Get via id>.");
+        }
         UserEntity createdUserEntity = userService.createUser(userDto);
         log.info("\n--------Created user before adding books ids: {}", createdUserEntity);
         userCacheRepo.initUserEntity(createdUserEntity);
@@ -78,11 +83,17 @@ public class UserDataFacade {
 
     public UserBookResponse updateUserWithBooks(UserBookRequest userBookRequest) {
         UserDto userDto = userMapper.userRequestToUserDto(userBookRequest.getUserRequest());
-        UserEntity foundUserEntityByUserDto = userService.findUserEntityByUserDto(userDto);
+        UserEntity foundUserEntityByUserDto = userService.findUserEntityByFullNameAndTitleFromUserDto(userDto);
+        if (Objects.equals(foundUserEntityByUserDto.getId(), USER_ID_NOT_FOUND)){
+            log.error("Exception - can't updateUserWithBooks - USER_ID_NOT_FOUND: {}", userDto);
+            throw new NotFoundException("Упс, введённые данные пользователя (FullName, Title) не найдены в базе. " +
+                    "Обновлять нечего. Попробуйте снова, уточнив актуальные данные.");
+        }
         bookService.deleteAllBooksByUserId(foundUserEntityByUserDto.getId());
 
         List<Long> inputedBookIdList = getListBooksIdsForUserEntAndAddBooksInRepo(userBookRequest,foundUserEntityByUserDto);
-
+        log.info("update User With Books - found UserEntity By UserDto: {}", foundUserEntityByUserDto);
+        log.info("update User With Books - inputed Book Id List: {}", inputedBookIdList);
         userService.changeUserDataAndUpdateRepo(userDto, foundUserEntityByUserDto, inputedBookIdList);
         return UserBookResponse.builder()
                 .userId(foundUserEntityByUserDto.getId())
@@ -91,8 +102,14 @@ public class UserDataFacade {
     }
 
     public UserBookResponse getUserWithBooks(Long userId) {
-        log.info("user data facade getUserWithBooks: {}", userId);
+        log.info("getUserWithBooks userId: {}", userId);
         Long actualUserId = userService.getUserById(userId).getId();
+        log.info("getUserWithBooks actualUserId: {}", actualUserId);
+        if (Objects.equals(actualUserId, USER_ID_NOT_FOUND)){
+            log.error("Exception - can't getUserWithBooks - USER_ID_NOT_FOUND: {}", actualUserId);
+            throw new NotFoundException("Упс, введённый идентификатор пользователя id=" + userId + " не найден в " +
+                    "базе. Отобразить нечего. Попробуйте снова, уточнив актуальные данные.");
+        }
         return UserBookResponse.builder()
                 .userId(actualUserId)
                 .booksIdList(bookCacheRepo.getAllBooksIdByUserId(actualUserId))
@@ -101,7 +118,9 @@ public class UserDataFacade {
 
     public void deleteUserWithBooks(Long userId) {
         Long actualUserId = userService.getUserById(userId).getId();
+        log.info("deleteUserWithBooks actualUserId: {}", actualUserId);
         if (actualUserId == USER_ID_NOT_FOUND){
+            log.error("Exception - can't deleteUserWithBooks - USER_ID_NOT_FOUND: {}", actualUserId);
             throw new NotFoundException("USER_ID_NOT_FOUND");
         } else {
             bookService.deleteAllBooksByUserId(actualUserId);

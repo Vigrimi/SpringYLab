@@ -32,19 +32,20 @@ public class BookServiceImpl implements BookService {
                 .author(Optional.ofNullable(bookDto.getAuthor()).orElse(BOOK_AUTHOR_NULL))
                 .pageCount(bookDto.getPageCount())
                 .build();
-        log.info("\n --------- book serv impl create book bookEntity:" + bookEntity);
+        log.info("\n --------- create book bookEntity:" + bookEntity);
         return bookEntity;
     }
 
     @Override
     public void updateBook(BookEntity changedBookEntity) {
         bookCacheRepo.initBookEntity(changedBookEntity);
+        log.info("\n --------- updateBook changedBookEntity:" + changedBookEntity);
     }
 
     @Override
     public BookDto getBookById(Long id) {
         BookEntity bookEntity = bookCacheRepo.getBookEntityById(id);
-        log.info("--2 user serv impl getUserById: {}", bookEntity);
+        log.info("--2 getUserById: {}", bookEntity);
         return BookDto.builder()
                 .id(bookEntity.getId())
                 .userId(bookEntity.getUserId())
@@ -57,10 +58,12 @@ public class BookServiceImpl implements BookService {
     @Override
     public void deleteAllBooksByUserId(Long userId) {
         bookCacheRepo.deleteAllBooksByUserId(userId);
+        log.info("---- deleteAllBooksByUserId userId: {}", userId);
     }
 
     @Override
     public void deleteBookById(Long id) {
         bookCacheRepo.deleteBookByBookId(id);
+        log.info("---- deleteBookById id: {}", id);
     }
 }

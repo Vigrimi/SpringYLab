@@ -13,7 +13,9 @@ public interface UserService {
 
     void deleteUserById(Long id);
 
-    UserEntity findUserEntityByUserDto(UserDto userDto);
+    UserEntity findUserEntityByFullNameAndTitleFromUserDto(UserDto userDto);
 
     void changeUserDataAndUpdateRepo(UserDto userDto, UserEntity foundUserEntityByUserDto, List<Long> booksIds);
+
+    UserEntity checkIfNewUserEntityFromUserDtoAlreadyIsInDB(UserDto userDto);
 }

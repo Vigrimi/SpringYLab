@@ -1,51 +1,43 @@
 package com.edu.ulab.app.storage.cacheRepo.impl;
 
 import com.edu.ulab.app.dto.UserDto;
-import com.edu.ulab.app.entity.BookEntity;
 import com.edu.ulab.app.entity.UserEntity;
 import com.edu.ulab.app.storage.cacheRepo.IUserCacheRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 @Component
 @Slf4j
 public class UserCacheRepoImpl implements IUserCacheRepo {
     private final long EMPTY_USER_CACHE_DB = 0L;
-    private List<UserEntity> usersEntity = new ArrayList<>();
+    private ConcurrentSkipListMap<Long, UserEntity> usersEntity = new ConcurrentSkipListMap<>();
 
     @Override
     public void initUserEntity(UserEntity user) {
-        this.usersEntity.add(user);
-        usersEntity.sort(Comparator.comparing(UserEntity::getId));
-        log.info("\n-------19 class UserCacheRepo after adding user in DB:" + usersEntity);
+        log.info("\n-------24 before adding user in DB:" + usersEntity);
+        this.usersEntity.put(user.getId(), user);
+        log.info("\n-------26 after adding user in DB:" + usersEntity);
     }
 
     @Override
     public long getLastUserId() {
-        return (usersEntity.isEmpty()) ? EMPTY_USER_CACHE_DB : usersEntity.get(usersEntity.size()-1).getId();
+        boolean usersEntityIsEmpty = usersEntity.isEmpty();
+        log.info("\n---- getLastUserId - usersEntityIsEmpty: {}", usersEntityIsEmpty);
+        return (usersEntityIsEmpty) ? EMPTY_USER_CACHE_DB : usersEntity.lastKey();
     }
 
     @Override
     public UserEntity getUserEntityById(Long id) {
-        UserEntity userEntity = userIdIsOutOfRange();
-        if (userIdIsInDB(id)){
-            for (UserEntity entity : usersEntity) {
-                if (Objects.equals(entity.getId(), id)){
-                    userEntity = entity;
-                    break;
-                }
-            }
-        }
-        return userEntity;
+        log.info("\n---- getUserEntityById - id: {}", id);
+        return userIdIsInDB(id) ? usersEntity.get(id) : userIdIsOutOfRange();
     }
 
     @Override
     public UserEntity userIdIsOutOfRange() {
+        log.info("\n---- userIdIsOutOfRange");
         return UserEntity.builder()
                 .id(0L)
                 .fullName("Введённый Вами Id пользователя отсутствует в базе.")
@@ -57,31 +49,47 @@ public class UserCacheRepoImpl implements IUserCacheRepo {
 
     @Override
     public boolean userIdIsInDB(Long id) {
-        return (usersEntity.stream().anyMatch((u) -> Objects.equals(u.getId(), id)));
+        log.info("\n---- userIdIsInDB - id: {}", id);
+        return (usersEntity.containsKey(id));
     }
 
     @Override
     public void deleteUserByUserId(Long id) {
-        log.info("\n------- class UserCacheRepoImpl DB before deleting user id: " + id + " ***" + usersEntity);
+        log.info("\n------- DB before deleting user id: " + id + " ***" + usersEntity);
         UserEntity foundUser = getUserEntityById(id);
 //        List<UserEntity> userToDelete = usersEntity.stream().filter((u) -> Objects.equals(u.getId(), id)).toList();
-        usersEntity.remove(foundUser);
-        log.info("\n------- class UserCacheRepoImpl DB after deleting user id: " + id + " ***" + usersEntity);
+        usersEntity.remove(foundUser.getId());
+        log.info("\n------- DB after deleting user id: " + id + " ***" + usersEntity);
     }
 
     @Override
-    public UserEntity findUserEntityByUserDto(UserDto userDto) {
+    public UserEntity findUserEntityByFullNameAndTitleFromUserDto(UserDto userDto) {
         UserEntity userEntity = userIdIsOutOfRange();
-
-        for (UserEntity entity : usersEntity) {
-            if (entity.getFullName().equalsIgnoreCase(userDto.getFullName()) &&
-                    entity.getTitle().equalsIgnoreCase(userDto.getTitle())){
-                userEntity = entity;
+        for (Map.Entry<Long, UserEntity> entry : usersEntity.entrySet()) {
+            if (entry.getValue().getFullName().equalsIgnoreCase(userDto.getFullName()) &&
+                    entry.getValue().getTitle().equalsIgnoreCase(userDto.getTitle())){
+                userEntity = entry.getValue();
                 break;
             }
         }
-        log.info("\n------- class UserCacheRepoImpl findUserEntityByUserDto userDto: " + userDto);
-        log.info("\n------- class UserCacheRepoImpl findUserEntityByUserDto userEntity: " + userEntity);
+        log.info("\n------- findUserEntityByFullNameAndTitleFromUserDto userDto: " + userDto);
+        log.info("\n------- findUserEntityByFullNameAndTitleFromUserDto userEntity: " + userEntity);
+        return userEntity;
+    }
+
+    @Override
+    public UserEntity findUserEntityByFullNameAndTitleAndAgeFromUserDto(UserDto userDto) {
+        UserEntity userEntity = userIdIsOutOfRange();
+        for (Map.Entry<Long, UserEntity> entry : usersEntity.entrySet()) {
+            if (entry.getValue().getFullName().equalsIgnoreCase(userDto.getFullName()) &&
+                    entry.getValue().getTitle().equalsIgnoreCase(userDto.getTitle()) &&
+                    entry.getValue().getAge() == userDto.getAge()){
+                userEntity = entry.getValue();
+                break;
+            }
+        }
+        log.info("\n------- findUserEntityByFullNameAndTitleAndAgeFromUserDto userDto: " + userDto);
+        log.info("\n------- findUserEntityByFullNameAndTitleAndAgeFromUserDto userEntity: " + userEntity);
         return userEntity;
     }
 }

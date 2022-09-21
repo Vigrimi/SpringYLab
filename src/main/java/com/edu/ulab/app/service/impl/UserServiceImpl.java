@@ -1,12 +1,11 @@
 package com.edu.ulab.app.service.impl;
 
 import com.edu.ulab.app.dto.UserDto;
-import com.edu.ulab.app.entity.BookEntity;
 import com.edu.ulab.app.entity.UserEntity;
+import com.edu.ulab.app.exception.NotFoundException;
 import com.edu.ulab.app.service.UserService;
 import com.edu.ulab.app.service.CheckDifferentData;
 import com.edu.ulab.app.storage.cacheRepo.IUserCacheRepo;
-import com.edu.ulab.app.storage.cacheRepo.impl.UserCacheRepoImpl;
 import com.edu.ulab.app.validation.UserValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,7 +32,7 @@ public class UserServiceImpl implements UserService, CheckDifferentData {
         UserEntity userEntity = userCacheRepo.userIdIsOutOfRange();
         Set<ConstraintViolation<UserDto>> violationSet = new HashSet<>();
 //                userValidator.isValidUserDto(userDto);
-        log.info("\n-------user serv impl createUser Set ConstraintViolation UserDto:" + violationSet);
+        log.info("\n------- createUser Set ConstraintViolation UserDto:" + violationSet);
         if (violationSet.isEmpty()){
             userEntity = UserEntity.builder()
                     .id(userCacheRepo.getLastUserId()+1)
@@ -43,22 +42,25 @@ public class UserServiceImpl implements UserService, CheckDifferentData {
                     .userHasBooksIdList(new ArrayList<>())
                     .build();
         } else {
-            userEntity.setFullName("Новый пользователь и его книги не были сохранены из-за ошибок при вводе данных:" +
-                    violationSet.toString());
+            log.error("Exception - can't create new user - inputed data errors: {}", userDto);
+            throw new NotFoundException("Новый пользователь и его книги не были сохранены из-за ошибок при вводе " +
+                    "данных:" + violationSet.toString());
         }
+        log.info("---- createUser userEntity: {}", userEntity);
         return userEntity;
     }
 
     @Override
     public void updateUser(UserEntity changedUserEntity) {
         userCacheRepo.initUserEntity(changedUserEntity);
+        log.info("---- updateUser changedUserEntity: {}", changedUserEntity);
     }
 
     @Override
     public UserDto getUserById(Long id) {
-        log.info("--1 user serv impl getUserById: {}", id);
+        log.info("--1 impl getUserById id: {}", id);
         UserEntity userEntity = userCacheRepo.getUserEntityById(id);
-        log.info("--2 user serv impl getUserById: {}", userEntity);
+        log.info("--2 getUserById userEntity: {}", userEntity);
         return UserDto.builder()
                 .id(userEntity.getId())
                 .fullName(userEntity.getFullName())
@@ -70,11 +72,13 @@ public class UserServiceImpl implements UserService, CheckDifferentData {
     @Override
     public void deleteUserById(Long id) {
         userCacheRepo.deleteUserByUserId(id);
+        log.info("\n---- delete User By Id id: {}", id);
     }
 
     @Override
-    public UserEntity findUserEntityByUserDto(UserDto userDto) {
-        return userCacheRepo.findUserEntityByUserDto(userDto);
+    public UserEntity findUserEntityByFullNameAndTitleFromUserDto(UserDto userDto) {
+        log.info("\n---- find UserEntity By UserDto - userDto: {}", userDto);
+        return userCacheRepo.findUserEntityByFullNameAndTitleFromUserDto(userDto);
     }
 
     @Override
@@ -86,7 +90,14 @@ public class UserServiceImpl implements UserService, CheckDifferentData {
                 .age(userDto.getAge())
                 .userHasBooksIdList(booksIds)
                 .build();
+        log.info("\n---- change User Data And Update Repo - changedUserEntity: {}", changedUserEntity);
         userCacheRepo.deleteUserByUserId(foundUserEntityByUserDto.getId());
         updateUser(changedUserEntity);
+    }
+
+    @Override
+    public UserEntity checkIfNewUserEntityFromUserDtoAlreadyIsInDB(UserDto userDto){
+        log.info("\n---- check If New UserEntity From UserDto Already Is In DB - userDto: {}", userDto);
+        return userCacheRepo.findUserEntityByFullNameAndTitleAndAgeFromUserDto(userDto);
     }
 }
