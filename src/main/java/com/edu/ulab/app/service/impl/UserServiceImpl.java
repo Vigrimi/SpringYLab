@@ -2,7 +2,7 @@ package com.edu.ulab.app.service.impl;
 
 import com.edu.ulab.app.dto.UserDto;
 import com.edu.ulab.app.entity.UserEntity;
-import com.edu.ulab.app.exception.NotFoundException;
+import com.edu.ulab.app.exception.MyNotFoundException;
 import com.edu.ulab.app.service.UserService;
 import com.edu.ulab.app.service.CheckDifferentData;
 import com.edu.ulab.app.storage.cacheRepo.IUserCacheRepo;
@@ -43,7 +43,7 @@ public class UserServiceImpl implements UserService, CheckDifferentData {
                     .build();
         } else {
             log.error("Exception - can't create new user - inputed data errors: {}", userDto);
-            throw new NotFoundException("Новый пользователь и его книги не были сохранены из-за ошибок при вводе " +
+            throw new MyNotFoundException("Новый пользователь и его книги не были сохранены из-за ошибок при вводе " +
                     "данных:" + violationSet.toString());
         }
         log.info("---- createUser userEntity: {}", userEntity);

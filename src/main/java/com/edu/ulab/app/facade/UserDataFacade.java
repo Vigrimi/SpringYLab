@@ -3,7 +3,7 @@ package com.edu.ulab.app.facade;
 import com.edu.ulab.app.dto.UserDto;
 import com.edu.ulab.app.entity.BookEntity;
 import com.edu.ulab.app.entity.UserEntity;
-import com.edu.ulab.app.exception.NotFoundException;
+import com.edu.ulab.app.exception.MyNotFoundException;
 import com.edu.ulab.app.mapper.BookMapper;
 import com.edu.ulab.app.mapper.UserMapper;
 import com.edu.ulab.app.service.BookService;
@@ -48,7 +48,7 @@ public class UserDataFacade {
         UserEntity userEntityForCheck = userService.checkIfNewUserEntityFromUserDtoAlreadyIsInDB(userDto);
         if (userEntityForCheck.getId() > USER_ID_NOT_FOUND){
             log.error("Exception - can't create new user - already exist: {}", userDto);
-            throw new NotFoundException("Упс, такой user уже есть в базе под идентификационным номером id=" +
+            throw new MyNotFoundException("Упс, такой user уже есть в базе под идентификационным номером id=" +
                     userEntityForCheck.getId() + ". Воспользуйтесь кнопкой <Update> или <Get via id>.");
         }
         UserEntity createdUserEntity = userService.createUser(userDto);
@@ -86,7 +86,7 @@ public class UserDataFacade {
         UserEntity foundUserEntityByUserDto = userService.findUserEntityByFullNameAndTitleFromUserDto(userDto);
         if (Objects.equals(foundUserEntityByUserDto.getId(), USER_ID_NOT_FOUND)){
             log.error("Exception - can't updateUserWithBooks - USER_ID_NOT_FOUND: {}", userDto);
-            throw new NotFoundException("Упс, введённые данные пользователя (FullName, Title) не найдены в базе. " +
+            throw new MyNotFoundException("Упс, введённые данные пользователя (FullName, Title) не найдены в базе. " +
                     "Обновлять нечего. Попробуйте снова, уточнив актуальные данные.");
         }
         bookService.deleteAllBooksByUserId(foundUserEntityByUserDto.getId());
@@ -107,7 +107,7 @@ public class UserDataFacade {
         log.info("getUserWithBooks actualUserId: {}", actualUserId);
         if (Objects.equals(actualUserId, USER_ID_NOT_FOUND)){
             log.error("Exception - can't getUserWithBooks - USER_ID_NOT_FOUND: {}", actualUserId);
-            throw new NotFoundException("Упс, введённый идентификатор пользователя id=" + userId + " не найден в " +
+            throw new MyNotFoundException("Упс, введённый идентификатор пользователя id=" + userId + " не найден в " +
                     "базе. Отобразить нечего. Попробуйте снова, уточнив актуальные данные.");
         }
         return UserBookResponse.builder()
@@ -121,7 +121,7 @@ public class UserDataFacade {
         log.info("deleteUserWithBooks actualUserId: {}", actualUserId);
         if (actualUserId == USER_ID_NOT_FOUND){
             log.error("Exception - can't deleteUserWithBooks - USER_ID_NOT_FOUND: {}", actualUserId);
-            throw new NotFoundException("USER_ID_NOT_FOUND");
+            throw new MyNotFoundException("USER_ID_NOT_FOUND");
         } else {
             bookService.deleteAllBooksByUserId(actualUserId);
             userService.deleteUserById(actualUserId);

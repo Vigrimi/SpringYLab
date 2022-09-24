@@ -1,6 +1,6 @@
 package com.edu.ulab.app.web.handler;
 
-import com.edu.ulab.app.exception.NotFoundException;
+import com.edu.ulab.app.exception.MyNotFoundException;
 import com.edu.ulab.app.web.response.BaseWebResponse;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class ControllerExceptionHandler {
 
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<BaseWebResponse> handleNotFoundExceptionException(@NonNull final NotFoundException exc) {
+    @ExceptionHandler(MyNotFoundException.class)
+    public ResponseEntity<BaseWebResponse> handleNotFoundExceptionException(@NonNull final MyNotFoundException exc) {
         log.error(exc.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new BaseWebResponse(createErrorMessage(exc)));
